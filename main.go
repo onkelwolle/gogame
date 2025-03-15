@@ -8,32 +8,13 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/onkelwolle/gogame/entities"
 )
 
-type Sprite struct {
-	Img  *ebiten.Image
-	X, Y float64
-}
-
-type Player struct {
-	*Sprite
-	Health uint
-}
-
-type Enemy struct {
-	*Sprite
-	FollowsPlayer bool
-}
-
-type Potion struct {
-	*Sprite
-	AmtHeal uint
-}
-
 type Game struct {
-	player      *Player
-	enemies     []*Enemy
-	potions     []*Potion
+	player      *entities.Player
+	enemies     []*entities.Enemy
+	potions     []*entities.Potion
 	tilemapJSON *TilemapJSON
 	tilemapImg  *ebiten.Image
 }
@@ -185,48 +166,48 @@ func main() {
 	}
 
 	game := Game{
-		player: &Player{
-			&Sprite{
+		player: &entities.Player{
+			Sprite: &entities.Sprite{
 				Img: playerImg,
 				X:   100,
 				Y:   100,
 			},
-			100,
+			Health: 100,
 		},
-		enemies: []*Enemy{
+		enemies: []*entities.Enemy{
 			{
-				&Sprite{
+				Sprite: &entities.Sprite{
 					Img: skeletonImg,
 					X:   50,
 					Y:   50,
 				},
-				true,
+				FollowsPlayer: true,
 			},
 			{
-				&Sprite{
+				Sprite: &entities.Sprite{
 					Img: skeletonImg,
 					X:   150,
 					Y:   150,
 				},
-				false,
+				FollowsPlayer: false,
 			},
 			{
-				&Sprite{
+				Sprite: &entities.Sprite{
 					Img: skeletonImg,
 					X:   75,
 					Y:   75,
 				},
-				false,
+				FollowsPlayer: false,
 			},
 		},
-		potions: []*Potion{
+		potions: []*entities.Potion{
 			{
-				&Sprite{
+				Sprite: &entities.Sprite{
 					Img: potionImg,
 					X:   200,
 					Y:   200,
 				},
-				10,
+				AmtHeal: 10,
 			},
 		},
 		tilemapJSON: tilemapJSON,

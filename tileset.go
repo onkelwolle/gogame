@@ -9,6 +9,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/onkelwolle/gogame/constants"
 )
 
 type Tileset interface {
@@ -32,12 +33,12 @@ func (u *UniformTileset) Img(id int) *ebiten.Image {
 	srcY := id / 22
 
 	// convert the x and y position to pixel coordinates
-	srcX *= 16
-	srcY *= 16
+	srcX *= constants.Tilesize
+	srcY *= constants.Tilesize
 
 	return u.img.SubImage(
 		image.Rect(
-			srcX, srcY, srcX+16, srcY+16,
+			srcX, srcY, srcX+constants.Tilesize, srcY+constants.Tilesize,
 		),
 	).(*ebiten.Image)
 }

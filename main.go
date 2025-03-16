@@ -8,8 +8,43 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/onkelwolle/gogame/entities"
 )
+
+func CheckCollisionHorizontal(sprite *entities.Sprite, colliders []image.Rectangle) {
+	for _, collider := range colliders {
+		if collider.Overlaps(image.Rect(
+			int(sprite.X),
+			int(sprite.Y),
+			int(sprite.X)+16,
+			int(sprite.Y)+16,
+		)) {
+			if sprite.Dx > 0 {
+				sprite.X = float64(collider.Min.X) - 16
+			} else if sprite.Dx < 0 {
+				sprite.X = float64(collider.Max.X)
+			}
+		}
+	}
+}
+
+func CheckCollisionVertical(sprite *entities.Sprite, colliders []image.Rectangle) {
+	for _, collider := range colliders {
+		if collider.Overlaps(image.Rect(
+			int(sprite.X),
+			int(sprite.Y),
+			int(sprite.X)+16,
+			int(sprite.Y)+16,
+		)) {
+			if sprite.Dy > 0 {
+				sprite.Y = float64(collider.Min.Y) - 16
+			} else if sprite.Dy < 0 {
+				sprite.Y = float64(collider.Max.Y)
+			}
+		}
+	}
+}
 
 type Game struct {
 	player      *entities.Player
@@ -19,41 +54,63 @@ type Game struct {
 	tilesets    []Tileset
 	tilemapImg  *ebiten.Image
 	cam         *Camera
+	colliders   []image.Rectangle
 }
 
 func (g *Game) Update() error {
 
 	//react to key presses
 
+	g.player.Dx = 0
+	g.player.Dy = 0
+
 	if ebiten.IsKeyPressed(ebiten.KeyW) {
-		g.player.Y -= 2
+		g.player.Dy = -2
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyS) {
-		g.player.Y += 2
+		g.player.Dy = 2
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyA) {
-		g.player.X -= 2
+		g.player.Dx = -2
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyD) {
-		g.player.X += 2
+		g.player.Dx = 2
 	}
 
+	g.player.X += g.player.Dx
+
+	CheckCollisionHorizontal(g.player.Sprite, g.colliders)
+
+	g.player.Y += g.player.Dy
+
+	CheckCollisionVertical(g.player.Sprite, g.colliders)
+
 	for _, sprite := range g.enemies {
+
+		sprite.Dx = 0
+		sprite.Dy = 0
+
 		if sprite.FollowsPlayer == false {
 			continue
 		}
 		if sprite.X < g.player.X {
-			sprite.X += 1
+			sprite.Dx += 1
 		}
 		if sprite.X > g.player.X {
-			sprite.X -= 1
+			sprite.Dx -= 1
 		}
 		if sprite.Y < g.player.Y {
-			sprite.Y += 1
+			sprite.Dy += 1
 		}
 		if sprite.Y > g.player.Y {
-			sprite.Y -= 1
+			sprite.Dy -= 1
 		}
+
+		sprite.X += sprite.Dx
+		CheckCollisionHorizontal(sprite.Sprite, g.colliders)
+
+		sprite.Y += sprite.Dy
+		CheckCollisionVertical(sprite.Sprite, g.colliders)
 	}
 
 	for _, potion := range g.potions {
@@ -146,6 +203,19 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 		opts.GeoM.Reset()
 	}
+
+	for _, collider := range g.colliders {
+		vector.StrokeRect(
+			screen,
+			float32(collider.Min.X)+float32(g.cam.X),
+			float32(collider.Min.Y)+float32(g.cam.Y),
+			float32(collider.Dx()),
+			float32(collider.Dy()),
+			1.0,
+			color.RGBA{0xff, 0x00, 0x00, 0xff},
+			true,
+		)
+	}
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
@@ -236,6 +306,9 @@ func main() {
 		tilemapImg:  tilemapImg,
 		tilesets:    tilesets,
 		cam:         NewCamera(0.0, 0.0),
+		colliders: []image.Rectangle{
+			image.Rect(100, 100, 116, 116),
+		},
 	}
 
 	if err := ebiten.RunGame(&game); err != nil {
